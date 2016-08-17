@@ -30,8 +30,37 @@ public:
     {}
     
     Response Process(const Request &request) {
-        // write your code here
+        // pop finished times that are later than the latest request
+        while (!finish_time_.empty() && finish_time_.front() <= request.arrival_time)
+        {
+            finish_time_.pop();
+        }
+        
+        // drop packet if buffer is full
+        if (finish_time_.size() >= size_)
+        {
+            return Response(true, -1);
+        }
+        
+        
+        // get time the packet started to be processed
+        int started;
+        if (!finish_time_.empty())
+        {
+            started = finish_time_.back();
+        }
+        else
+        {
+            started = request.arrival_time;
+        }
+        
+        // push time the packet will be finished
+        finish_time_.push(started + request.process_time);
+        
+        // process the packet
+        return Response(false, started);
     }
+    
 private:
     int size_;
     std::queue <int> finish_time_;
