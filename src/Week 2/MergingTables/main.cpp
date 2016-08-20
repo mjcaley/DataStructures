@@ -28,18 +28,6 @@ struct DisjointSets {
         {
             sets[i].parent = i;
         }
-        recalculate_max_table_size();
-    }
-    
-    void recalculate_max_table_size()
-    {
-        auto result = std::max_element(sets.begin(),
-                                       sets.end(),
-                                       [](const DisjointSetsElement& left, const DisjointSetsElement& right)
-                                       {
-                                           return left.size < right.size;
-                                       });
-        max_table_size = std::max(max_table_size, result->size);
     }
     
     int getParent(int table) {
@@ -54,28 +42,30 @@ struct DisjointSets {
     
     void merge(int destination, int source)
     {
-        //cout << "merging destination: " << destination+1 << " and source: " << source+1 << endl;
         int realDestination = getParent(destination);
         int realSource = getParent(source);
-        //cout << "destination parent is " << realDestination+1 << " source parent is " << realSource+1 << endl;
-        //cout << "destination size is " << sets[realDestination].size << " source size is " << sets[realSource].size << endl;
         if (realDestination != realSource)
         {
-            if (sets[realDestination].size > sets[realSource].size)
+            if (sets[realDestination].rank > sets[realSource].rank)
             {
                 sets[realSource].parent = realDestination;
+                // move the rows to the other set
                 sets[realDestination].size += sets[realSource].size;
                 sets[realSource].size = 0;
+                // update the maximum table size
                 max_table_size = max(max_table_size, sets[realDestination].size);
-                //cout << "destination tree bigger than source tree " << sets[realDestination].size << ' ' << sets[realSource].size << endl;
             }
             else
             {
                 sets[realDestination].parent = realSource;
+                // move the rows to the other set
                 sets[realSource].size += sets[realDestination].size;
                 sets[realDestination].size = 0;
+                // update the maximum table size
                 max_table_size = max(max_table_size, sets[realSource].size);
-                //cout << "source tree bigger than destination tree " << sets[realSource].size << ' ' << sets[realDestination].size << endl;
+                
+                // increase the rank since the two sets are unequal
+                sets[realSource].rank += 1;
             }
         }
     }
